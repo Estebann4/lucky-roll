@@ -1,0 +1,108 @@
+export default function LuckyClicker() {
+  const [coins, setCoins] = React.useState(100);
+  const [multiplier, setMultiplier] = React.useState(1);
+  const [luck, setLuck] = React.useState(1);
+  const [rollingSpeed, setRollingSpeed] = React.useState(1000);
+  const [shopOpen, setShopOpen] = React.useState(false);
+  const [inventory, setInventory] = React.useState([]);
+  const [showCutscene, setShowCutscene] = React.useState(null);
+
+  const rarities = [
+    { name: "Common", chance: 0.5, reward: 10 },
+    { name: "Uncommon", chance: 0.3, reward: 57 },
+    { name: "Rare", chance: 0.1, reward: 213 },
+    { name: "Very Rare", chance: 0.07, reward: 512 },
+    { name: "Epic", chance: 0.05, reward: 1342 },
+    { name: "Legendary", chance: 0.01, reward: 8765 },
+    { name: "Mythical", chance: 0.005, reward: 46321 },
+    { name: "Godly", chance: 0.0023, reward: 237845 },
+    { name: "Celestial", chance: 0.001, reward: 987654 },
+    { name: "Divine", chance: 0.00067, reward: 1543211 },
+    { name: "Ascended", chance: 0.00024, reward: 3897654 },
+    { name: "Beyond Reality", chance: 0.00009, reward: 8671235 },
+    { name: "Impossible", chance: 0.000025, reward: 49381234 },
+    { name: "One in a Million", chance: 0.000005, reward: 162738492 },
+    { name: "One in a Billion", chance: 0.000000001, reward: 9357284931 }
+  ];
+
+  const potions = [
+    { name: "2x Luck Potion", multiplier: 2, cost: 100 },
+    { name: "5x Luck Potion", multiplier: 5, cost: 500 },
+    { name: "10x Luck Potion", multiplier: 10, cost: 1500 },
+    { name: "50x Luck Potion", multiplier: 50, cost: 10000 },
+    { name: "100x Luck Potion", multiplier: 100, cost: 50000 },
+    { name: "1000x Luck Potion", multiplier: 1000, cost: 500000 }
+  ];
+
+  function roll() {
+    let roll = Math.random() / luck;
+    let accumulatedChance = 0;
+    for (let rarity of rarities) {
+      accumulatedChance += rarity.chance;
+      if (roll < accumulatedChance) {
+        const newItem = { name: rarity.name, reward: rarity.reward * multiplier };
+        setInventory([...inventory, newItem]);
+        setCoins(coins + rarity.reward * multiplier);
+        
+        if (["Mythical", "Godly", "Celestial", "Divine", "Ascended", "Beyond Reality", "Impossible", "One in a Million", "One in a Billion"].includes(rarity.name)) {
+          setShowCutscene(rarity.name);
+          setTimeout(() => setShowCutscene(null), 3000);
+        }
+        break;
+      }
+    }
+  }
+
+  function buyPotion(potion) {
+    if (coins >= potion.cost) {
+      setCoins(coins - potion.cost);
+      setLuck(luck * potion.multiplier);
+    }
+  }
+
+  function sellItem(index) {
+    const item = inventory[index];
+    setCoins(coins + item.reward);
+    setInventory(inventory.filter((_, i) => i !== index));
+  }
+
+  return (
+    <div className="flex flex-col items-center p-4">
+      <h1 className="text-2xl font-bold">Lucky Clicker</h1>
+      <p className="text-lg">Coins: {coins}</p>
+      <p className="text-lg">Luck: {luck}x</p>
+      <button onClick={roll} className="bg-blue-500 text-white p-2 rounded mt-2">
+        Roll (Win Rare Prizes)
+      </button>
+      <button onClick={() => setShopOpen(!shopOpen)} className="bg-red-500 text-white p-2 rounded mt-2">
+        {shopOpen ? "Close Shop" : "Open Shop"}
+      </button>
+      {shopOpen && (
+        <div className="p-4 bg-gray-200 rounded mt-2">
+          <h2 className="text-xl font-bold">Potion Shop</h2>
+          {potions.map((potion, index) => (
+            <button key={index} onClick={() => buyPotion(potion)} className="bg-green-500 text-white p-2 rounded m-1">
+              Buy {potion.name} ({potion.cost} Coins)
+            </button>
+          ))}
+        </div>
+      )}
+      
+      <h2 className="text-xl font-bold mt-4">Inventory</h2>
+      <ul className="bg-gray-100 p-2 rounded w-64">
+        {inventory.map((item, index) => (
+          <li key={index} className="flex justify-between p-2 border-b">
+            {item.name} - {item.reward} Coins
+            <button onClick={() => sellItem(index)} className="bg-yellow-500 text-white p-1 rounded">Sell</button>
+          </li>
+        ))}
+      </ul>
+      
+      {showCutscene && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-75 flex justify-center items-center text-white text-4xl font-bold">
+          {`You found ${showCutscene}!`}
+        </div>
+      )}
+    </div>
+  );
+}
